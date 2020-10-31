@@ -15,6 +15,10 @@ def shutdown():
     irc.stop()
 
 
+def get_status():
+    return irc.get_connected()
+
+
 # Request to check this torrent again
 def _locked_notify(announcement_id, backend):
     db_announcement = db.get_announcement(announcement_id)

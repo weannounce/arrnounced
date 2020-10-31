@@ -116,6 +116,16 @@ def index():
     )
 
 
+@app.route("/status")
+@login_required
+def status():
+    return render_template(
+        "status.html",
+        connected=web_handler.get_status(),
+        login_required=user_config.login_required,
+    )
+
+
 @app.route("/logs")
 @login_required
 def logs():
