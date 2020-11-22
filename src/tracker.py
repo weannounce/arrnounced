@@ -1,3 +1,9 @@
+def notify_observers(tracker_status):
+    print("Connected: {}".format(tracker_status.connected))
+    for channel, msg in tracker_status.channels.items():
+        print("Channel {}: {}".format(channel, msg))
+
+
 class Tracker:
     def __init__(self, tracker_config):
         self.config = tracker_config
@@ -14,9 +20,42 @@ class Tracker:
 
 class TrackerStatus:
     def __init__(self):
-        self.connected = False
-        self.channels = []
-        self.latest_announcement = None
+        self._connected = False
+        self._channels = {}
+        self._latest_announcement = None
+
+    @property
+    def connected(self):
+        return self._connected
+
+    @connected.setter
+    def connected(self, connected):
+        if connected:
+            print("--- CONNECTED")
+        else:
+            self._channels = {}
+            print("--- DISCONNECTED")
+        self._connected = connected
+        notify_observers(self)
+
+    @property
+    def channels(self):
+        return self._channels
+
+    def joined_channel(self, channel):
+        print("--- JOINED")
+        self._channels[channel] = "Joined"
+        notify_observers(self)
+
+    def parted_channel(self, channel, message):
+        print("--- PARTED")
+        self._channels[channel] = "Parted: {}".format(message)
+        notify_observers(self)
+
+    def kicked_channel(self, channel, by, reason):
+        print("--- KICKED")
+        self._channels[channel] = "Kicked by {}, reason: {}".format(by, reason)
+        notify_observers(self)
 
 
 class TrackerConfig:

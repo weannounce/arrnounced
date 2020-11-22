@@ -42,8 +42,18 @@ class IRC(irc_modes.ModesFixer):
                 self.tracker.config.irc_inviter, self.tracker.config.irc_invite_cmd
             )
 
+    async def on_disconnect(self, expected):
+        self.tracker.status.connected = False
+        await super().on_disconnect(expected)
+
+    async def on_kill(self, target, by, reason):
+        self.tracker.status.connected = False
+        logger.info("KILL: target: %s, by: %s, reason: %s", target, by, reason)
+        await super().on_kill(target, by, reason)
+
     async def on_connect(self):
         logger.info("Connected to: %s", self.tracker.config.irc_server)
+        self.tracker.status.connected = True
         await super().on_connect()
 
         if self.tracker.config.irc_ident_password is None:
@@ -80,6 +90,21 @@ class IRC(irc_modes.ModesFixer):
                 "Skipping join. %s is not in irc_channels list or specified in XML tracker configuration.",
                 channel,
             )
+
+    async def on_join(self, channel, user):
+        await super().on_join(channel, user)
+        if user == self.tracker.config.irc_nickname:
+            self.tracker.status.joined_channel(channel)
+
+    async def on_part(self, channel, user, message=None):
+        await super().on_part(channel, user, message)
+        if user == self.tracker.config.irc_nickname:
+            self.tracker.status.parted_channel(channel, message)
+
+    async def on_kick(self, channel, user, by, reason=None):
+        await super().on_kick(channel, user, by, reason)
+        if user == self.tracker.config.irc_nickname:
+            self.tracker.status.kicked_channel(channel, by, reason)
 
 
 pool = pydle.ClientPool()
