@@ -41,8 +41,8 @@
           </thead>
           <tbody>
             {% for tracker, values in connected.items() %}
-            <tr>
-              <td>{{ tracker }}</td>
+            <tr id="{{ tracker }}">
+              <td>{{ values["name"] }}</td>
               <td>{{ values["connected"] }}</td>
               <td>{{ values["channels"] }}</td>
               <td>{{ values["latest_announcement"] }}</td>
@@ -67,7 +67,21 @@
     });
   socket.on("reply", function(msg) {
       console.log(msg);
-      document.getElementById("status_div").innerHTML = "Connected: " + msg;
+      row = document.getElementById(msg["type"])
+      for (var j = 1, col; col = row.cells[j]; j++) {
+          if (j == 1) {
+              col.innerHTML = msg["connected"]
+          }
+          else if (j == 2) {
+              col.innerHTML = JSON.stringify(msg["channels"])
+          }
+          else if (j == 3) {
+              col.innerHTML = msg["latest_announcement"]
+          }
+          else if (j == 4) {
+              col.innerHTML = msg["latest_snatch"]
+          }
+      }
       //$("status_div").text("Connected: " + msg);
     });
 </script>

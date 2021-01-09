@@ -18,7 +18,7 @@ def notify_observers(tracker_status):
 class Tracker:
     def __init__(self, tracker_config):
         self.config = tracker_config
-        self.status = TrackerStatus(tracker_config.long_name)
+        self.status = TrackerStatus(tracker_config)
 
     @property
     def name(self):
@@ -30,8 +30,9 @@ class Tracker:
 
 
 class TrackerStatus:
-    def __init__(self, name):
-        self._name = name
+    def __init__(self, config):
+        self._type = config.type
+        self._name = config.long_name
         self._connected = False
         self._channels = {}
         self._latest_announcement = None
@@ -39,7 +40,8 @@ class TrackerStatus:
 
     def as_dict(self):
         return {
-            "tracker": self._name,
+            "type": self._type,
+            "name": self._name,
             "connected": self._connected,
             "channels": self._channels,
             "latest_announcement": self._latest_announcement,
@@ -92,11 +94,13 @@ class TrackerStatus:
         self._channels[channel] = "Joined"
         notify_observers(self)
 
+    # TODO: Handle None message
     def parted_channel(self, channel, message):
         print("--- PARTED")
         self._channels[channel] = "Parted: {}".format(message)
         notify_observers(self)
 
+    # TODO: Handle None message
     def kicked_channel(self, channel, by, reason):
         print("--- KICKED")
         self._channels[channel] = "Kicked by {}, reason: {}".format(by, reason)

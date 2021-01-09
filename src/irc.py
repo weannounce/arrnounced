@@ -12,7 +12,7 @@ logger = logging.getLogger("IRC")
 def get_connected():
     connected = {}
     for client in clients:
-        connected[client.tracker.config.short_name] = client.tracker.status.as_dict()
+        connected[client.tracker.config.type] = client.tracker.status.as_dict()
     return connected
 
 

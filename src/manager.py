@@ -55,7 +55,7 @@ def run(user_config, tracker_config_path):
     irc_thread.start()
     webui_thread.start()
 
-    # tracker.register_observer(webui.update)
+    tracker.register_observer(webui.update)
 
     irc_thread.join()
     webui_thread.join()
