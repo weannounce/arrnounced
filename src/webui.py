@@ -10,9 +10,11 @@ from flask import request
 from flask import send_from_directory
 from flask import url_for
 from flask_login import LoginManager
-from flask_login import login_user, logout_user
+from flask_login import login_user, logout_user, current_user
 from flask_login import login_required
 from flask_login import UserMixin
+from flask_socketio import SocketIO
+from flask_socketio import join_room, leave_room
 from pathlib import Path
 
 import log
@@ -35,6 +37,7 @@ app = Flask("Arrnounced", template_folder=templates_dir)
 # This will invalidate logins on each restart of Arrnounced
 # But I'm too lazy to think of something else at the moment
 app.secret_key = os.urandom(16)
+socketio = SocketIO(app)
 
 login_manager = LoginManager(app=app)
 login_manager.login_view = "login"
@@ -46,14 +49,45 @@ def run(config):
     global user_config
     user_config = config
     try:
-        app.run(
-            debug=False,
+        socketio.run(
+            app,
             host=user_config.webui_host,
             port=user_config.webui_port,
+            debug=False,
             use_reloader=False,
         )
     except OSError as e:
         logger.error("Error starting webserver: %s", e)
+
+
+def ack():
+    print("msg received")
+
+
+def update(connected):
+    socketio.emit("reply", connected, room="status")
+
+
+@socketio.on("connect")
+def handle_connected():
+    if current_user.is_authenticated:
+        print("is authed")
+    else:
+        print("is NOT authed")
+
+    print("connected")
+
+
+@socketio.on("disconnect")
+def handle_disconnected():
+    leave_room("status")
+    print("disconnected")
+
+
+@socketio.on("status_event")
+def handle_status_event(json):
+    print("received json: " + str(json))
+    join_room("status")
 
 
 @app.route("/shutdown", methods=["GET", "POST"])

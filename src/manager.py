@@ -4,7 +4,7 @@ import threading
 
 import irc
 import webui
-from tracker import Tracker, TrackerConfig
+import tracker
 from tracker_xml_config import get_tracker_xml_configs
 
 logger = logging.getLogger("MANAGER")
@@ -21,8 +21,8 @@ def _get_trackers(user_config, tracker_config_path):
         elif _are_settings_configured(
             user_tracker, xml_configs[user_tracker.type].settings
         ):
-            trackers[user_tracker.type] = Tracker(
-                TrackerConfig(user_tracker, xml_configs[user_tracker.type])
+            trackers[user_tracker.type] = tracker.Tracker(
+                tracker.TrackerConfig(user_tracker, xml_configs[user_tracker.type])
             )
     return trackers
 
@@ -54,6 +54,8 @@ def run(user_config, tracker_config_path):
 
     irc_thread.start()
     webui_thread.start()
+
+    tracker.register_observer(webui.update)
 
     irc_thread.join()
     webui_thread.join()

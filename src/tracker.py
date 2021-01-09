@@ -1,4 +1,15 @@
+observers = []
+
+
+def register_observer(observer):
+    global observers
+    observers.append(observer)
+
+
 def notify_observers(tracker_status):
+    global observers
+    for observer in observers:
+        observer(tracker_status.connected)
     print("Connected: {}".format(tracker_status.connected))
     for channel, msg in tracker_status.channels.items():
         print("Channel {}: {}".format(channel, msg))

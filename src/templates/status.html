@@ -27,7 +27,7 @@
             </div>
         </div>
     </nav>
-    <div class="container-fluid" style="padding-left:25px;padding-right:25px;">
+    <div id="status_div" class="container-fluid" style="padding-left:25px;padding-right:25px;">
                     {% for key, value in connected.items() %}
                     <b>{{ key }}</b>: {{ value }}
 					{% endfor %}
@@ -35,6 +35,20 @@
     <script src="assets/js/jquery.min.js"></script>
     <script src="assets/bootstrap/js/bootstrap.min.js"></script>
     <script src="assets/js/common.js"></script>
+    <script src="assets/js/status.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.4.0/socket.io.js"
+      crossorigin="anonymous"></script>
+<script type="text/javascript" charset="utf-8">
+    var socket = io();
+    socket.on('connect', function() {
+        socket.emit('status_event', {data: 'I\'m connected!'});
+    });
+  socket.on("reply", function(msg) {
+      console.log(msg);
+      document.getElementById("status_div").innerHTML = "Connected: " + msg;
+      //$("status_div").text("Connected: " + msg);
+    });
+</script>
 </body>
 
 </html>
