@@ -28,9 +28,31 @@
         </div>
     </nav>
     <div id="status_div" class="container-fluid" style="padding-left:25px;padding-right:25px;">
-                    {% for key, value in connected.items() %}
-                    <b>{{ key }}</b>: {{ value }}
-					{% endfor %}
+      <div class="table-responsive" id="indexers">
+        <table class="table table-bordered table-condensed">
+          <thead>
+            <tr>
+              <th class="col-xs-2">Indexer</th>
+              <th class="col-xs-2">Connected</th>
+              <th class="col-xs-8">Channels</th>
+              <th class="col-xs-2">Latest Announcement</th>
+              <th class="col-xs-2">Latest Snatch</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for tracker, values in connected.items() %}
+            <tr>
+              <td>{{ tracker }}</td>
+              <td>{{ values["connected"] }}</td>
+              <td>{{ values["channels"] }}</td>
+              <td>{{ values["latest_announcement"] }}</td>
+              <td>{{ values["latest_snatch"] }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+          <caption class="text-center text-success bg-success">Indexers Status</caption>
+        </table>
+      </div>
     </div>
     <script src="assets/js/jquery.min.js"></script>
     <script src="assets/bootstrap/js/bootstrap.min.js"></script>

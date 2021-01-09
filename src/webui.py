@@ -64,8 +64,8 @@ def ack():
     print("msg received")
 
 
-def update(connected):
-    socketio.emit("reply", connected, room="status")
+def update(tracker_status):
+    socketio.emit("reply", tracker_status.as_dict(), room="status")
 
 
 @socketio.on("connect")
