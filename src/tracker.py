@@ -45,6 +45,10 @@ class TrackerStatus:
         self._latest_announcement = None
         self._latest_snatch = None
 
+    def init_latest(self, latest_announcement, latest_snatch):
+        self._latest_announcement = latest_announcement
+        self._latest_snatch = latest_snatch
+
     def as_dict(self):
         return {
             "type": self._type,

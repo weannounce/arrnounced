@@ -70,7 +70,7 @@ def update(tracker_status):
 
 @socketio.on("connect")
 def handle_connected():
-    if current_user.is_authenticated or not user_config.login_required():
+    if current_user.is_authenticated or not user_config.login_required:
         print("is authed")
     else:
         print("is NOT authed")
