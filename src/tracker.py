@@ -16,7 +16,10 @@ def notify_observers(tracker_status):
 
 
 class Tracker:
-    def __init__(self, tracker_config):
+    def __init__(
+        self,
+        tracker_config,
+    ):
         self.config = tracker_config
         self.status = TrackerStatus(tracker_config)
 
@@ -27,6 +30,10 @@ class Tracker:
     @property
     def type(self):
         return self.config.type
+
+
+def _date2str(date):
+    return "Never" if date is None else date.strftime("%Y-%m-%d %H:%M:%S")
 
 
 class TrackerStatus:
@@ -44,8 +51,8 @@ class TrackerStatus:
             "name": self._name,
             "connected": self._connected,
             "channels": self._channels,
-            "latest_announcement": self._latest_announcement,
-            "latest_snatch": self._latest_snatch,
+            "latest_announcement": _date2str(self._latest_announcement),
+            "latest_snatch": _date2str(self._latest_snatch),
         }
 
     @property
@@ -60,9 +67,21 @@ class TrackerStatus:
     def latest_announcement(self):
         return self._latest_announcement
 
+    @latest_announcement.setter
+    def latest_announcement(self, announcement):
+        self._latest_announcement = announcement.date
+        if announcement.snatch_date is not None:
+            self._latest_snatch = announcement.snatch_date
+        notify_observers(self)
+
     @property
     def latest_snatch(self):
         return self._latest_snatch
+
+    @latest_snatch.setter
+    def latest_snatch(self, announcement):
+        self._latest_snatch = announcement.snatch_date
+        notify_observers(self)
 
     @connected.setter
     def connected(self, connected):
@@ -78,16 +97,17 @@ class TrackerStatus:
     def channels(self):
         return self._channels
 
-        # 471     ERR_CHANNELISFULL
-        #                "<channel> :Cannot join channel (+l)"
-        # 472     ERR_UNKNOWNMODE
-        #                "<char> :is unknown mode char to me"
-        # 473     ERR_INVITEONLYCHAN
-        #                "<channel> :Cannot join channel (+i)"
-        # 474     ERR_BANNEDFROMCHAN
-        #                "<channel> :Cannot join channel (+b)"
-        # 475     ERR_BADCHANNELKEY
-        #                "<channel> :Cannot join channel (+k)"
+    # TODO
+    # 471     ERR_CHANNELISFULL
+    #                "<channel> :Cannot join channel (+l)"
+    # 472     ERR_UNKNOWNMODE
+    #                "<char> :is unknown mode char to me"
+    # 473     ERR_INVITEONLYCHAN
+    #                "<channel> :Cannot join channel (+i)"
+    # 474     ERR_BANNEDFROMCHAN
+    #                "<channel> :Cannot join channel (+b)"
+    # 475     ERR_BADCHANNELKEY
+    #                "<channel> :Cannot join channel (+k)"
 
     def joined_channel(self, channel):
         print("--- JOINED")

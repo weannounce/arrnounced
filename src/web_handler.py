@@ -36,8 +36,9 @@ def _locked_notify(announcement_id, backend):
     )
 
     if renotify(announcement, backend):
+        announcement.snatched()
         logger.debug("%s accepted the torrent this time!", backend.name)
-        db.insert_snatched(db_announcement, backend.name)
+        db.insert_snatched(db_announcement, announcement.snatch_date, backend.name)
         return True
 
     logger.debug("%s still refused this torrent...", backend.name)

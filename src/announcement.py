@@ -15,6 +15,10 @@ class Announcement:
         self.category = category
         self.date = date
         self.indexer = indexer
+        self.snatch_date = None
+
+    def snatched(self):
+        self.snatch_date = datetime.now()
 
 
 def create_announcement(tracker, variables):

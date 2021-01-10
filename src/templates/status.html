@@ -70,7 +70,13 @@
       row = document.getElementById(msg["type"])
       for (var j = 1, col; col = row.cells[j]; j++) {
           if (j == 1) {
-              col.innerHTML = msg["connected"]
+              if (msg["connected"]) {
+                  text = "<p style=\"color:green\">Yes</p>"
+                }
+              else {
+                  text = "<p style=\"color:red\">No</p>"
+                }
+              col.innerHTML = text
           }
           else if (j == 2) {
               col.innerHTML = JSON.stringify(msg["channels"])
