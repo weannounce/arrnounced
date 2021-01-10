@@ -13,7 +13,6 @@ logger = logging.getLogger("MANAGER")
 
 def _set_latest(tracker):
     latest_announcement, latest_snatch = db.get_latest(tracker.config.short_name)
-    print(latest_announcement, latest_snatch)
     tracker.status.init_latest(latest_announcement, latest_snatch)
 
 
@@ -57,15 +56,15 @@ def run(user_config, tracker_config_path):
         logger.error("No trackers configured, exiting...")
         sys.exit(1)
 
+    tracker.register_observer(webui.update)
+
     irc_thread = threading.Thread(target=irc.run, args=(trackers,))
     webui_thread = threading.Thread(target=webui.run, args=(user_config,))
 
-    irc_thread.start()
     webui_thread.start()
+    irc_thread.start()
 
-    tracker.register_observer(webui.update)
-
-    irc_thread.join()
     webui_thread.join()
+    irc_thread.join()
 
     logger.debug("Threads joined")

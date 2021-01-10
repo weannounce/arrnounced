@@ -10,9 +10,6 @@ def notify_observers(tracker_status):
     global observers
     for observer in observers:
         observer(tracker_status)
-    print("Connected: {}".format(tracker_status.connected))
-    for channel, msg in tracker_status.channels.items():
-        print("Channel {}: {}".format(channel, msg))
 
 
 class Tracker:
@@ -54,7 +51,7 @@ class TrackerStatus:
             "type": self._type,
             "name": self._name,
             "connected": self._connected,
-            "channels": self._channels,
+            "channels": [cs.as_dict() for cs in self.channels.values()],
             "latest_announcement": _date2str(self._latest_announcement),
             "latest_snatch": _date2str(self._latest_snatch),
         }
@@ -89,45 +86,77 @@ class TrackerStatus:
 
     @connected.setter
     def connected(self, connected):
-        if connected:
-            print("--- CONNECTED")
-        else:
+        if not connected:
             self._channels = {}
-            print("--- DISCONNECTED")
         self._connected = connected
         notify_observers(self)
+
+    class ChannelStatus:
+        def __init__(self, channel):
+            self.channel = channel
+            self.joined = False
+            self.reason = ""
+
+        def as_dict(self):
+            return {
+                "channel": self.channel,
+                "joined": self.joined,
+                "reason": self.reason,
+            }
+
+        def set_reason(self, static, reason):
+            if reason:
+                self.reason = "{}: {}".format(static, reason)
+            else:
+                self.reason = static
 
     @property
     def channels(self):
         return self._channels
 
-    # TODO
-    # 471     ERR_CHANNELISFULL
-    #                "<channel> :Cannot join channel (+l)"
-    # 472     ERR_UNKNOWNMODE
-    #                "<char> :is unknown mode char to me"
-    # 473     ERR_INVITEONLYCHAN
-    #                "<channel> :Cannot join channel (+i)"
-    # 474     ERR_BANNEDFROMCHAN
-    #                "<channel> :Cannot join channel (+b)"
-    # 475     ERR_BADCHANNELKEY
-    #                "<channel> :Cannot join channel (+k)"
-
-    def joined_channel(self, channel):
-        print("--- JOINED")
-        self._channels[channel] = "Joined"
+    def channel_full(self, rejection):
+        self._channels[rejection.channel] = TrackerStatus.ChannelStatus(
+            rejection.channel
+        )
+        self._channels[rejection.channel].set_reason("Channel full", rejection.reason)
         notify_observers(self)
 
-    # TODO: Handle None message
-    def parted_channel(self, channel, message):
-        print("--- PARTED")
-        self._channels[channel] = "Parted: {}".format(message)
+    def invite_only(self, rejection):
+        self._channels[rejection.channel] = TrackerStatus.ChannelStatus(
+            rejection.channel
+        )
+        self._channels[rejection.channel].set_reason("Invite only", rejection.reason)
         notify_observers(self)
 
-    # TODO: Handle None message
-    def kicked_channel(self, channel, by, reason):
-        print("--- KICKED")
-        self._channels[channel] = "Kicked by {}, reason: {}".format(by, reason)
+    def banned(self, rejection):
+        self._channels[rejection.channel] = TrackerStatus.ChannelStatus(
+            rejection.channel
+        )
+        self._channels[rejection.channel].set_reason("Banned", rejection.reason)
+        notify_observers(self)
+
+    def bad_channel_key(self, rejection):
+        self._channels[rejection.channel] = TrackerStatus.ChannelStatus(
+            rejection.channel
+        )
+        self._channels[rejection.channel].set_reason(
+            "Bad channel key", rejection.reason
+        )
+        notify_observers(self)
+
+    def joined(self, channel):
+        self._channels[channel] = TrackerStatus.ChannelStatus(channel)
+        self._channels[channel].joined = True
+        notify_observers(self)
+
+    def parted(self, channel, message):
+        self._channels[channel].joined = False
+        self._channels[channel].set_reason("Parted", message)
+        notify_observers(self)
+
+    def kicked(self, channel, by, reason):
+        self._channels[channel].joined = False
+        self._channels[channel].set_reason("Kicked by {}".format(by), reason)
         notify_observers(self)
 
 

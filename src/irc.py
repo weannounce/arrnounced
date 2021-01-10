@@ -1,9 +1,10 @@
 from asyncio import all_tasks, run_coroutine_threadsafe
 import logging
 import pydle
+import re
 import time
-import irc_modes
 
+import irc_modes
 import message_handler
 
 logger = logging.getLogger("IRC")
@@ -70,6 +71,8 @@ class IRC(irc_modes.ModesFixer):
     async def on_raw(self, message):
         await super().on_raw(message)
 
+        # TODO
+        # async def on_raw_221(self, message):
         if message.command == 221 and "+r" in message._raw:
             logger.info("Identified with NICKSERV (221)")
             await self.attempt_join_channel()
@@ -94,17 +97,75 @@ class IRC(irc_modes.ModesFixer):
     async def on_join(self, channel, user):
         await super().on_join(channel, user)
         if user == self.tracker.config.irc_nickname:
-            self.tracker.status.joined_channel(channel)
+            self.tracker.status.joined(channel)
 
     async def on_part(self, channel, user, message=None):
         await super().on_part(channel, user, message)
         if user == self.tracker.config.irc_nickname:
-            self.tracker.status.parted_channel(channel, message)
+            self.tracker.status.parted(channel, message)
 
     async def on_kick(self, channel, user, by, reason=None):
         await super().on_kick(channel, user, by, reason)
         if user == self.tracker.config.irc_nickname:
-            self.tracker.status.kicked_channel(channel, by, reason)
+            self.tracker.status.kicked(channel, by, reason)
+
+    # Channel full
+    async def on_raw_471(self, message):
+        channel_rejection = _create_channel_rejection(message._raw)
+        if (
+            channel_rejection
+            and channel_rejection.user == self.tracker.config.irc_nickname
+        ):
+            self.tracker.status.channel_full(channel_rejection)
+
+    # Invite only
+    async def on_raw_473(self, message):
+        channel_rejection = _create_channel_rejection(message._raw)
+        if (
+            channel_rejection
+            and channel_rejection.user == self.tracker.config.irc_nickname
+        ):
+            self.tracker.status.invite_only(channel_rejection)
+
+    # Banned from channel
+    async def on_raw_474(self, message):
+        channel_rejection = _create_channel_rejection(message._raw)
+        if (
+            channel_rejection
+            and channel_rejection.user == self.tracker.config.irc_nickname
+        ):
+            self.tracker.status.banned(channel_rejection)
+
+    # Bad channel key
+    async def on_raw_475(self, message):
+        channel_rejection = _create_channel_rejection(message._raw)
+        if (
+            channel_rejection
+            and channel_rejection.user == self.tracker.config.irc_nickname
+        ):
+            self.tracker.status.bad_channel_key(channel_rejection)
+
+
+class ChannelRejection:
+    def __init__(self, user, channel, reason):
+        self.user = user
+        self.channel = channel
+        self.reason = reason
+
+
+# :d7574991db48.example.com 474 bipbopdelayed #delay :Cannot join channel (you're banned)
+regex_channel_reject = re.compile(
+    r":[^\s]+ \d+ +(?P<user>[^\s]+) (?P<channel>[^\s]+) :(?P<reason>.*)"
+)
+
+
+def _create_channel_rejection(message):
+    match = regex_channel_reject.match(message)
+    if match:
+        return ChannelRejection(
+            match.group("user"), match.group("channel"), match.group("reason")
+        )
+    return None
 
 
 pool = pydle.ClientPool()

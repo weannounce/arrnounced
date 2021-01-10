@@ -41,7 +41,7 @@
           </thead>
           <tbody>
             {% for tracker, values in connected.items() %}
-            <tr id="{{ tracker }}">
+            <tr id="indexer_{{ tracker }}">
               <td>{{ values["name"] }}</td>
               <td>{{ values["connected"] }}</td>
               <td>{{ values["channels"] }}</td>
@@ -67,7 +67,7 @@
     });
   socket.on("reply", function(msg) {
       console.log(msg);
-      row = document.getElementById(msg["type"])
+      row = document.getElementById("indexer_" + msg["type"])
       for (var j = 1, col; col = row.cells[j]; j++) {
           if (j == 1) {
               if (msg["connected"]) {
